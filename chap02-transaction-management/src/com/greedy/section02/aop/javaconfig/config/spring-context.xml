@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+    <!--데이터 베이스 설정 정보를 읽어오는 부분 res를 등록해야한다.-->
+    <!--connection-info.properties 등록한 거 불러오기..-->
+    <context:property-placeholder location="connection-info.properties"/>
+
+    <!--spring에서 관리한 bean을 스캔하는 부분-->
+    <context:component-scan base-package="com.greedy.section02.aop.javaconfig"/>
+
+    <!-- sqlSessionTemplate Bean 등록-->
+    <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+        <!--ref는 다른 빈 참조할때 사용.-->
+        <constructor-arg ref="sqlSession"/>
+    </bean>
+
+    <!-- sqlSession FactoryBean 등록 -->
+    <bean id="sqlSession" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="configLocation" value="com/greedy/section02/aop/javaconfig/config/mybatis-config.xml"/>
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!-- basic DataSource 빈 등록-->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${oracle.dev.driver}" />
+        <property name="url" value="${oracle.dev.url}"/>
+        <property name="username" value="${oracle.dev.username}"/>
+        <property name="password" value="${oracle.dev.password}"/>
+        <property name="defaultAutoCommit" value="false"/>
+    </bean>
+
+    <!-- 매퍼 스캔 등록 -->
+    <mybatis:scan base-package="com.greedy.section02.aop.javaconfig.model.dao"/>
+
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+</beans>

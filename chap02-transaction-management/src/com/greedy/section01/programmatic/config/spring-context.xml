@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+      http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+      http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd">
+
+    <!--connection-info.properties 등록한 거 불러오기..-->
+    <context:property-placeholder location="connection-info.properties"/>
+    <context:component-scan base-package="com.greedy.section01.programmatic"/>
+
+    <!-- sqlSessionTemplate Bean 등록-->
+    <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+        <!--ref는 다른 빈 참조할때 사용.-->
+        <constructor-arg ref="sqlSession"/>
+    </bean>
+
+    <!-- sqlSession FactoryBean 등록 -->
+    <bean id="sqlSession" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="configLocation" value="com/greedy/section01/programmatic/config/mybatis-config.xml"/>
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!-- basic DataSource 빈 등록-->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${oracle.dev.driver}" />
+        <property name="url" value="${oracle.dev.url}"/>
+        <property name="username" value="${oracle.dev.username}"/>
+        <property name="password" value="${oracle.dev.password}"/>
+        <property name="defaultAutoCommit" value="false"/>
+    </bean>
+
+    <!-- 매퍼 스캔 등록 -->
+    <mybatis-spring:scan base-package="com.greedy.section01.programmatic.model.dao"/>
+
+    <!-- 스프링 transcation 관리용 bean 등록 -->
+    <!-- connection의 트랜잭션 api를 이용해서 트랜잭션을 관리햇주는 트랜잭션 매니저이다.
+         이 트랜잭션 매니저를 사용하려면 트랜잭션을 적용할 DataSource가 스프링의 빈으로 등록되어야 한다.
+         jdbc api를 이용해서 트랜잭션을 관리하는 데이터 엑세스 기술인 jdbc와 ibatis sqlMap으로 만든 DAO에 적용할 수 있다.
+         다음과 같이 트랜잭션을 적용할 dao가 사용하는 것과 동일한 datasource를 빈으로 제공해줘야 한다.
+
+         참고로 api에 나오는 platformTramsactionManager는 트랜잭션 경계를 지정하는ㄴ데 사용한다.
+         트랜잭션이 어디서 시작하고 종료하는지, 종료할 때 정상 종료(커밋)인지 비정상 종료(롤백)인지를 결정하는 것이다.
+         스프링에서는 시작과 종료를 트랜잭션 전파 기법을 이용해 자유롭게 조합하고 확장할 수 있다.
+
+         하지만 이 부분은 다루지 않을 것이기 때문에 dataSource를 이용해서 dataSoruceTransactionManager를 이용할 것이다. (표준설정)
+    -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+</beans>
